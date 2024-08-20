@@ -1,0 +1,732 @@
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: emailservice
+spec:
+  selector:
+    matchLabels:
+      app: emailservice
+  template:
+    metadata:
+      labels:
+        app: emailservice
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      containers:
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/emailservice:v0.10.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT 
+          value: 8080
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          grpc: 
+            # what port it should send that grpc request to
+            port: 8080
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 8080
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 100m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 64Mi
+          # resource limits
+          limits:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: emailservice
+spec:
+  type: ClusterIP 
+  selector:
+    app: emailservice
+  ports:
+  - protocol: TCP
+    port: 5000
+    targetPort: 8080
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: recommendationservice
+spec:
+  selector:
+    matchLabels:
+      app: recommendationservice
+  template:
+    metadata:
+      labels:
+        app: recommendationservice
+    spec:
+      containers:
+        # at least 2 replicas per app, by default its 1 if we do not set it
+        replicas: 2
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/recommendationservice:v0.10.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT 
+          value: 8080
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: productcatalogservice:3550
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          grpc: 
+            # what port it should send that grpc request to
+            port: 8080
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 8080
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 100m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 64Mi
+          # resource limits
+          limits:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: recommendationservice
+spec:
+  type: ClusterIP 
+  selector:
+    app: recommendationservice
+  ports:
+  - protocol: TCP
+    port: 8080
+    targetPort: 8080
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: productcatalogservice
+spec:
+  selector:
+    matchLabels:
+      app: productcatalogservice
+  template:
+    metadata:
+      labels:
+        app: productcatalogservice
+    spec:
+      containers:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/productcatalogservice:v0.10.1
+        ports:
+        - containerPort: 3550
+        env:
+        - name: PORT 
+          value: 3550
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          httpGet:
+            # check this URL to tell whether is app is healthy or not
+            path: /health
+            # what port it should send that grpc request to
+            port: 3550
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 3550
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 100m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 64Mi
+          # resource limits
+          limits:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: productcatalogservice
+spec:
+  type: ClusterIP 
+  selector:
+    app: productcatalogservice
+  ports:
+  - protocol: TCP
+    port: 3550
+    targetPort: 3550
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: paymentservice
+spec:
+  selector:
+    matchLabels:
+      app: paymentservice
+  template:
+    metadata:
+      labels:
+        app: paymentservice
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      containers:
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/paymentservice:v0.10.1
+        ports:
+        - containerPort: 50051
+        env:
+        - name: PORT 
+          value: 50051
+        - name: DISABLE_PROFILER
+          value: 1
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          grpc: 
+            # what port it should send that grpc request to
+            port: 50051
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 50051
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 100m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 64Mi
+          # resource limits
+          limits:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: paymentservice
+spec:
+  type: ClusterIP 
+  selector:
+    app: paymentservice
+  ports:
+  - protocol: TCP
+    port: 50051
+    targetPort: 50051
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: currencyservice
+spec:
+  selector:
+    matchLabels:
+      app: currencyservice
+  template:
+    metadata:
+      labels:
+        app: currencyservice
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      containers:
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/currencyservice:v0.10.1
+        ports:
+        - containerPort: 7000
+        env:
+        - name: PORT 
+          value: 7000
+        - name: DISABLE_PROFILER
+          value: 1
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          grpc: 
+            # what port it should send that grpc request to
+            port: 7000
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 7000
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 100m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 64Mi
+          # resource limits
+          limits:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: currencyservice
+spec:
+  type: ClusterIP 
+  selector:
+    app: currencyservice
+  ports:
+  - protocol: TCP
+    port: 7000
+    targetPort: 7000
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: shippingservice
+spec:
+  selector:
+    matchLabels:
+      app: shippingservice
+  template:
+    metadata:
+      labels:
+        app: shippingservice
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      containers:
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/shippingservice:v0.10.1
+        ports:
+        - containerPort: 50051
+        env:
+        - name: PORT 
+          value: 50051
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          grpc: 
+            # what port it should send that grpc request to
+            port: 50051
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 50051
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 100m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 64Mi
+          # resource limits
+          limits:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: shippingservice
+spec:
+  type: ClusterIP 
+  selector:
+    app: shippingservice
+  ports:
+  - protocol: TCP
+    port: 50051
+    targetPort: 50051
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: adservice
+spec:
+  selector:
+    matchLabels:
+      app: adservice
+  template:
+    metadata:
+      labels:
+        app: adservice
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      containers:
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/adservice:v0.10.1
+        ports:
+        - containerPort: 9555
+        env:
+        - name: PORT 
+          value: 9555
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          grpc: 
+            # what port it should send that grpc request to
+            port: 9555
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 9555
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 200m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 128Mi
+          # resource limits
+          limits:
+            cpu: 300m
+            memory: 256Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: adservice
+spec:
+  type: ClusterIP 
+  selector:
+    app: adservice
+  ports:
+  - protocol: TCP
+    port: 9555
+    targetPort: 9555
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cartservice
+spec:
+  selector:
+    matchLabels:
+      app: cartservice
+  template:
+    metadata:
+      labels:
+        app: cartservice
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      containers:
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/cartservice:v0.10.1
+        ports:
+        - containerPort: 7070
+        env:
+        - name: PORT 
+          value: 7070
+        - name: REDIS_ADDR
+          value: redis-cart:6379
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          grpc: 
+            # what port it should send that grpc request to
+            port: 7070
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 7070
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 100m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 64Mi
+          # resource limits
+          limits:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cartservice
+spec:
+  type: ClusterIP 
+  selector:
+    app: cartservice
+  ports:
+  - protocol: TCP
+    port: 7070
+    targetPort: 7070
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-cart
+spec:
+  selector:
+    matchLabels:
+      app: redis-cart
+  template:
+    metadata:
+      labels:
+        app: redis-cart
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      containers:
+      - name: redis
+        image: redis:alpine
+        ports:
+        - containerPort: 6379
+        # Health check script 
+        livenessProbe:
+          # Tells Kubelets it should wait 5 seconds before performing the first liveness probe or the first readiness probe
+          initialDelaySeconds: 5
+          # this application uses tcp
+          tcpSocket: 
+            # the container will attempt to open a socket on port 6370
+            # if it succeed on establishing a connection the container is healthy
+            # if it cannot estabablish a connection app is considered to be failing
+            port: 6370
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          # initial delay seconds if we know the app takes longer to start
+          initialDelaySeconds: 5
+          tcpSocket: 
+            # the container will attempt to open a socket on port 6370
+            port: 6379
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        # Redis needs more Memory, less CPU
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 70m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 200Mi
+          # resource limits
+          limits:
+            cpu: 125m
+            memory: 300Mi
+        volumeMounts:
+        - name: redis-data
+          mountPath: /data
+      volumes:
+      - name: redis-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-cart
+spec:
+  type: ClusterIP 
+  selector:
+    app: redis-cart
+  ports:
+  - protocol: TCP
+    port: 6379
+    targetPort: 6379
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkoutservice
+spec:
+  selector:
+    matchLabels:
+      app: checkoutservice
+  template:
+    metadata:
+      labels:
+        app: checkoutservice
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      containers:
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/checkoutservice:v0.10.1
+        ports:
+        - containerPort: 5050
+        env:
+        - name: PORT 
+          value: 5050
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: productcatalogservice:3550
+        - name: SHIPPING_SERVICE_ADDR
+          value: shippingservice:50051
+        - name: PAYMENT_SERVICE_ADDR
+          value: paymentservice:50051
+        - name: EMAIL_SERVICE_ADDR
+          value: emailservice:5000
+        - name: CURRENCY_SERVICE_ADDR
+          value: currencyservice:7000
+        - name: CART_SERVICE_ADDR
+          value: cartservice:7070
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          grpc: 
+            # what port it should send that grpc request to
+            port: 5050
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 5050
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 100m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 64Mi
+          # resource limits
+          limits:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkoutservice
+spec:
+  type: ClusterIP 
+  selector:
+    app: checkoutservice
+  ports:
+  - protocol: TCP
+    port: 5050
+    targetPort: 5050
+--- 
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: 2
+      containers:
+      - name: service
+        image: gcr.io/google-samples/microservices-demo/frontend:v0.10.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: PORT 
+          value: 8080
+        - name: PRODUCT_CATALOG_SERVICE_ADDR
+          value: productcatalogservice:3550
+        - name: CURRENCY_SERVICE_ADDR
+          value: currencyservice:7000
+        - name: CART_SERVICE_ADDR
+          value: cartservice:7070
+        - name: RECOMMENDATION_SERVICE_ADDR
+          value: recommendationservice:8080
+        - name: SHIPPING_SERVICE_ADDR
+          value: shippingservice:50051
+        - name: CHECKOUT_SERVICE_ADDR
+          value: checkoutservice:5050
+        - name: AD_SERVICE_ADDR
+          value: adservice:9555
+        - name: ENABLE_PROFILER
+          value: 0  # Ensure this environment variable is set correctly
+        - name: SHOPPING_ASSISTANT_SERVICE_ADDR
+          value: shoppingassistantservice:9090  # Add this line with the correct service address
+        # Health check script 
+        livenessProbe:
+          # this application uses grpc protocol
+          grpc: 
+            # what port it should send that grpc request to
+            port: 8080
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          grpc: 
+            # what port it should send that grpc request to
+            port: 8080
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 100m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 64Mi
+          # resource limits
+          limits:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+spec:
+  type: LoadBalancer
+  selector:
+    app: frontend
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
