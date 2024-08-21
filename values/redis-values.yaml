@@ -1,0 +1,3 @@
+# override the values in the redis-values.yaml file
+appName: redis-cart 
+appReplicas: 2

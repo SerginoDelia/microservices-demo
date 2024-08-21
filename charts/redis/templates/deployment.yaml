@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      # at least 2 replicas per app, by default its 1 if we do not set it
+      replicas: {{ .Values.appReplias}}
+      containers:
+      - name: {{ .Values.appName }}
+        image: "{{.Values.appImage }}:{{ .Values.appVersion}}"
+        ports:
+        - containerPort: {{ .Values.containerPort }}
+        # Health check script 
+        livenessProbe:
+          # Tells Kubelets it should wait 5 seconds before performing the first liveness probe or the first readiness probe
+          initialDelaySeconds: 5
+          # this application uses tcp
+          tcpSocket: 
+            # the container will attempt to open a socket on port 6370
+            # if it succeed on establishing a connection the container is healthy
+            # if it cannot estabablish a connection app is considered to be failing
+            port: {{ .Values.containerPort }}
+          # how often the application should be checked for its health
+          periodSeconds: 5
+        # Readiness probe checks if application is ready to receive traffic
+        readinessProbe:
+          # initial delay seconds if we know the app takes longer to start
+          initialDelaySeconds: 5
+          tcpSocket: 
+            # the container will attempt to open a socket on port 6370
+            port: {{ .Values.containerPort }}
+          # checks every [time_insterval] until application is fully started
+          periodSeconds: 5
+        # Redis needs more Memory, less CPU
+        resources:
+          requests:
+            # CPU resources are defined in millicores - m = millicore
+            cpu: 70m
+            # Memory resources are defined in bytes - Mi = mebibyte
+            memory: 200Mi
+          # resource limits
+          limits:
+            cpu: 125m
+            memory: 300Mi
+        volumeMounts:
+        - name: {{ .Values.volumeName }}
+          mountPath: {{ .Values.containerMountPath}}
+      volumes:
+      - name: {{ .Values.volumeName }}
+        emptyDir: {}

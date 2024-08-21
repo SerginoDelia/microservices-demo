@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.appName }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Values.appName }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.appName }}
+    spec:
+      # default is 1, if not specified
+      replicas: {{ .Values.appReplicas }}
+      containers:
+      - name: {{ .Values.appName }}
+        # image has 2 parts: repo and image name, and image version
+        # this will be interpreted as a string
+        image: {{ .Values.appImage }}:{{ .Values.appVersion }}
+        ports:
+        - containerPort: {{ .Values.containerPort }}
+        env:
+        # iterate over the list
+        # this let us and other chart users provide any number of environment variables 1 - n
+        {{- range .Values.containerEnvVars}}
+        - name: {{ .name }}
+          value: {{ .value | quote }}
+        # stop the loop at the end of the list
+        {{- end}}
